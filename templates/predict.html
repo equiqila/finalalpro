@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predict Page</title>
+    <style>
+        /* Set background image for predicting page */
+        body {
+            margin: 0;
+            padding: 0;
+            background-image: url("/static/backgroundpredict.jpg");
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            color: white;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        /* Navbar with buttons at the top */
+        .navbar {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+            transition: display 0.3s ease;
+        }
+
+        .navbar.hidden {
+            display: none;  
+        }
+
+        .btn {
+            background-color: transparent;
+            color: black;
+            border: 2px solid black;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 1.2em;
+            border-radius: 50px;
+            margin: 0 10px;
+            display: inline-block;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+
+        .btn:active {
+            background-color: #26579d;
+            color: white;
+        }
+
+        /* Form container for uploading CSV */
+        .upload-container {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: auto;
+            max-width: 500px;
+        }
+
+        /* Oval background around the text */
+        .upload-container h2 {
+            background-color: #ffec87; /* Light yellow background */
+            display: inline-block;
+            padding: 15px 60px; /* Make it larger and oval */
+            border-radius: 50px;
+            font-size: 2em; /* Larger text size */
+            margin-bottom: 30px;
+            color: black; /* Black text color */
+        }
+
+        /* Custom file input styling */
+        .file-label {
+            display: inline-block;
+            background-color: #ffec87; /* Light yellow background */
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-size: 1.5em;
+            cursor: pointer;
+            width: auto;
+            text-align: right; /* Align text to the right */
+            margin-top: 10px;
+            color: black;
+        }
+
+        input[type="file"] {
+            display: none; /* Hide the default file input */
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            background-color: #0056b3; /* Blue background */
+            color: white;
+            border: none;
+            padding: 15px 40px; /* Larger button */
+            font-size: 1.5em; /* Larger font */
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #003f74; /* Darker blue */
+        }
+
+        /* Display success or error message */
+        .message {
+            color: #28a745; /* Green for success */
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+
+        /* Display predictions */
+        .predictions {
+            margin-top: 30px;
+            font-size: 1.2em;
+            color: black; /* Change the color to black */
+            text-align: center; /* Center the title */
+        }
+
+        /* Table Styling */
+        .table-container {
+            width: 80%;  /* Set table width to 80% for proper alignment */
+            margin-top: 50px; /* Tabel sedikit lebih ke atas */
+            margin-left: auto;  /* Center-align table */
+            margin-right: auto; /* Center-align table */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for 3D effect */
+            border-radius: 10px; /* Add rounded corners */
+            overflow-x: auto;  /* Allow horizontal scrolling if needed */
+        }
+
+        .table {
+            width: 100%;
+            color: black; /* Teks dalam tabel diubah jadi hitam */
+            border-collapse: collapse;
+            margin-left: auto;  /* Center-align table */
+            margin-right: auto; /* Center-align table */
+            border-radius: 10px; /* Add rounded corners */
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .table th {
+            background-color: #0056b3;
+            color: white; /* Menjaga warna teks header tetap putih */
+        }
+
+        .table td {
+            background-color: #f9f9f9; /* Light background for cells */
+        }
+
+        /* Sticky header on table */
+        .table th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        /* Hide the form and navbar after prediction */
+        .form-container-hidden {
+            display: none;
+        }
+
+        /* Remove background when predictions are displayed */
+        body.predictions-visible {
+            background-image: none; /* Hapus background image */
+        }
+
+        /* Styling item list for prediction result */
+        .prediction-item {
+            background-color: #f1f1f1;
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body class="{% if predictions %} predictions-visible {% endif %}">
+    <!-- Navbar with buttons -->
+    <div class="navbar {% if predictions %} hidden {% endif %}">
+        <a href="/" class="btn">Home</a>
+        <a href="/predict" class="btn">Predicting</a>
+        <a href="/dashboard" class="btn">Dashboard</a>
+        <a href="/model_explainability" class="btn">Model Explainability</a>
+        <a href="/recommendation" class="btn">Recommendation</a>
+        <a href="/about" class="btn">About</a>
+    </div>
+
+    <!-- Form for Uploading CSV -->
+    <div class="upload-container {% if predictions %} form-container-hidden {% endif %}">
+        <h2>Upload Your CSV File</h2>
+        <form action="/predict" method="POST" enctype="multipart/form-data">
+            <label for="csv_file" class="file-label">Choose file</label>
+            <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+            <br><br>
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+
+        <!-- Display success or error message -->
+        {% if message %}
+            <div class="message">{{ message }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Display predictions if available -->
+    {% if predictions %}
+        <div class="predictions">
+            <h3>Predictions:</h3>
+            <!-- Display predictions as a table -->
+            <div class="table-container">
+                {{ predictions|safe }}  <!-- This will render the HTML table that is passed from the backend -->
+            </div>
+        </div>
+    {% endif %}
+</body>
+</html>
+
+

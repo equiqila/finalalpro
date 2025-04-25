@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Explainability</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #0056b3;
+            margin: 20px 0;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .chart-container {
+            height: 500px;
+        }
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+        }
+        .text-center {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 1.2em;
+            color: #333;
+        }
+        .model-description {
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 1200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Feature Importance & Classification Report</h1>
+    <div class="grid-container">
+        <!-- Feature Importance Chart -->
+        <div class="container chart-container">
+            <canvas id="featureImportanceChart"></canvas>
+        </div>
+
+        <!-- Image Container for Class Report -->
+        <div class="container">
+            <img src="{{ url_for('static', filename='classreport.jpg') }}" alt="Classification Report">
+            <div class="text-center">
+                <p><strong>Accuracy = 0.86%</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Description -->
+    <div class="model-description">
+        <h2>About the Model We Use</h2>
+        <p>
+            <strong>XGBoost (Extreme Gradient Boosting)</strong> is a fast and powerful machine learning algorithm used for structured data. 
+            It improves accuracy by combining predictions from multiple decision trees. Known for its speed and reliability, 
+            XGBoost is widely used in real-world tasks. Because of this, we use the XGBoost model for our web to ensure 
+            high performance and accurate predictions.
+        </p>
+    </div>
+
+    <!-- Chart.js Script -->
+    <script>
+        const importanceData = JSON.parse('{{ importance_data | tojson | safe }}');
+        const ctx = document.getElementById('featureImportanceChart').getContext('2d');
+
+        // Horizontal Bar Chart
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: importanceData.features,
+                datasets: [{
+                    label: 'Importance Score',
+                    data: importanceData.importances,
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y', // Membuat bar chart horizontal
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: "Importance Score" } },
+                    y: { title: { display: true, text: "Features" } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
